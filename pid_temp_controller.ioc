@@ -1,8 +1,9 @@
 #MicroXplorer Configuration settings - do not modify
 ADC1.DiscontinuousConvMode=ENABLE
-ADC1.IPParameters=master,SelectedChannel,NbrOfConversionFlag,DiscontinuousConvMode,OversamplingMode,SamplingTimeCommon1,SamplingTimeCommon2
+ADC1.IPParameters=master,SelectedChannel,NbrOfConversionFlag,DiscontinuousConvMode,OversamplingMode,SamplingTimeCommon1,SamplingTimeCommon2,Resolution
 ADC1.NbrOfConversionFlag=1
 ADC1.OversamplingMode=DISABLE
+ADC1.Resolution=ADC_RESOLUTION_10B
 ADC1.SamplingTimeCommon1=ADC_SAMPLETIME_1CYCLE_5
 ADC1.SamplingTimeCommon2=ADC_SAMPLETIME_1CYCLE_5
 ADC1.SelectedChannel=ADC_CHANNEL_0

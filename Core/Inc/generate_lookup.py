@@ -1,6 +1,6 @@
 # SETUP -- DEFINE CONSTANTS HERE
 
-bits = 12               # ADC resolution (bits)
+bits = 10               # ADC resolution (bits)
 pullup = 4700           # Pullup resistor value (Ohms)
 base_temperature = 25   # Thermistor base temperature (Celsius)
 thermistor = 100000     # Thermistor value at base temperature (Ohms)

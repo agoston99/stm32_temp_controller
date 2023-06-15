@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "thermistor_lookup.h"
+#include "ssd1306.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,7 +64,27 @@ static void MX_TIM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+HAL_StatusTypeDef SetPwm(uint16_t value){
+  TIM_OC_InitTypeDef sConfigOC = {0};
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = value;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+  sConfigOC.OCNIdleState = TIM_OCNIDLESTATE_RESET;
+  return HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_1);
+}
 
+void print_int(char* dest, int num, int places){
+	for(int i = 0; i < places; i++){
+		if(num != 0)
+			dest[places - 1 - i] = '0' + (num % 10);
+		else
+			dest[places - 1 - i] = ' ';
+		num = num / 10;
+	}
+}
 /* USER CODE END 0 */
 
 /**
@@ -99,6 +121,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   uint16_t thermistor_adc = 0;
+  ssd1306_SetDisplayOn(1);
+  char temp[22];
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  uint16_t pwm_value = 0;
 
   /* USER CODE END 2 */
 
@@ -106,8 +132,36 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	ssd1306_Fill(Black);
+
 	thermistor_adc = HAL_ADC_GetValue(&hadc1);
 	current_temperature = thermistor_value_lookup[thermistor_adc];
+
+	ssd1306_SetCursor(0, 0);
+	print_int(temp, current_temperature/10, 4);
+	print_int(temp+5, current_temperature % 10, 1);
+	temp[4] = '.';
+	temp[6] = '\0';
+	ssd1306_WriteString(temp, Font_11x18, White);
+
+	ssd1306_SetCursor(0, 20);
+	print_int(temp+5, temperature_setpoint/10, 4);
+	print_int(temp+10, temperature_setpoint%10, 1);
+	memcpy(temp, "SET: ", 5);
+	temp[9] = '.';
+	temp[11] = '\0';
+	ssd1306_WriteString(temp, Font_6x8, White);
+
+	ssd1306_UpdateScreen();
+
+	pwm_value = (current_temperature >= temperature_setpoint) ? 0 : 65535;
+
+	SetPwm(pwm_value);
+
+	if(HAL_GPIO_ReadPin(BTN_PLUS_GPIO_Port, BTN_PLUS_Pin)) temperature_setpoint += 10;
+	if(HAL_GPIO_ReadPin(BTN_MINUS_GPIO_Port, BTN_MINUS_Pin)) temperature_setpoint -= 10;
+
+	HAL_Delay(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -182,7 +236,7 @@ static void MX_ADC1_Init(void)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.Resolution = ADC_RESOLUTION_10B;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
